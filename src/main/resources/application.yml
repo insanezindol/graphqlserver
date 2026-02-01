@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: graphqlserver
+
+  # 가상 스레드 설정
+  threads:
+    virtual:
+      enabled: true
+
+  # MySQL 데이터소스
+  datasource:
+    url: jdbc:mysql://localhost:3306/devdb?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: devuser
+    password: devpassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # jpa
+  jpa:
+    hibernate:
+      ddl-auto: update        # dev: update, prod: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # graphql
+  graphql:
+    graphiql:
+      enabled: true
+    schema:
+      printer:
+        enabled: true
+
+server:
+  port: 8080
+  shutdown: graceful
