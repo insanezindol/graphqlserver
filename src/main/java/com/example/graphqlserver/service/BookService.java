@@ -1,6 +1,8 @@
 package com.example.graphqlserver.service;
 
+import com.example.graphqlserver.entity.Author;
 import com.example.graphqlserver.entity.Book;
+import com.example.graphqlserver.repository.AuthorRepository;
 import com.example.graphqlserver.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import java.util.Optional;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final AuthorRepository authorRepository;
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     @Transactional(readOnly = true)
@@ -31,13 +34,18 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public List<Book> getBooksByAuthor(String author) {
-        return bookRepository.findByAuthorContainingIgnoreCase(author);
+    public List<Book> getBooksByTitle(String title) {
+        return bookRepository.findByTitleContainingIgnoreCase(title);
     }
 
     @Transactional(readOnly = true)
-    public List<Book> getBooksByTitle(String title) {
-        return bookRepository.findByTitleContainingIgnoreCase(title);
+    public List<Book> getBooksByAuthorId(Long authorId) {
+        return bookRepository.findByAuthorId(authorId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Book> getBooksByPriceRange(Double minPrice, Double maxPrice) {
+        return bookRepository.findByPriceBetween(minPrice, maxPrice);
     }
 
     @Transactional(readOnly = true)
@@ -45,11 +53,41 @@ public class BookService {
         return bookRepository.searchByKeyword(keyword);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Book> getBookWithAuthor(Long id) {
+        return bookRepository.findByIdWithAuthor(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Book> getBooksWithAuthors() {
+        return bookRepository.findAllWithAuthor();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Book> getBooksByAuthorName(String authorName) {
+        return bookRepository.findByAuthorName(authorName);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Book> getBooksByAuthorNationality(String nationality) {
+        return bookRepository.findByAuthorNationality(nationality);
+    }
+
     @Transactional
     public Book createBook(Book book) {
+        if (book.getAuthor() == null || book.getAuthor().getId() == null) {
+            throw new RuntimeException("Author ID is required");
+        }
+
+        Author author = authorRepository.findById(book.getAuthor().getId())
+                .orElseThrow(() -> new RuntimeException("Author not found with id: " + book.getAuthor().getId()));
+
+        book.setAuthor(author);
+
         if (book.getPublishedDate() != null) {
             book.setPublishedDate(parseDateTime(book.getPublishedDate().toString()));
         }
+
         return bookRepository.save(book);
     }
 
@@ -61,17 +99,25 @@ public class BookService {
         if (bookDetails.getTitle() != null) {
             book.setTitle(bookDetails.getTitle());
         }
-        if (bookDetails.getAuthor() != null) {
-            book.setAuthor(bookDetails.getAuthor());
-        }
         if (bookDetails.getIsbn() != null) {
             book.setIsbn(bookDetails.getIsbn());
+        }
+        if (bookDetails.getDescription() != null) {
+            book.setDescription(bookDetails.getDescription());
         }
         if (bookDetails.getPrice() != null) {
             book.setPrice(bookDetails.getPrice());
         }
+        if (bookDetails.getPageCount() != null) {
+            book.setPageCount(bookDetails.getPageCount());
+        }
         if (bookDetails.getPublishedDate() != null) {
             book.setPublishedDate(parseDateTime(bookDetails.getPublishedDate().toString()));
+        }
+        if (bookDetails.getAuthor() != null && bookDetails.getAuthor().getId() != null) {
+            Author author = authorRepository.findById(bookDetails.getAuthor().getId())
+                    .orElseThrow(() -> new RuntimeException("Author not found with id: " + bookDetails.getAuthor().getId()));
+            book.setAuthor(author);
         }
 
         return bookRepository.save(book);

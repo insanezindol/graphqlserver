@@ -1,13 +1,13 @@
 package com.example.graphqlserver.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -18,44 +18,44 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "books")
+@Table(name = "authors")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Book {
+public class Author {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String title;
+    private String name;
 
-    @Column(nullable = false)
-    private String isbn;
+    @Column(unique = true)
+    private String email;
 
-    private String description;
+    private String bio;
 
-    private Double price;
+    @Column(name = "birth_date")
+    private LocalDateTime birthDate;
 
-    @Column(name = "published_date")
-    private LocalDateTime publishedDate;
+    @Column(name = "nationality")
+    private String nationality;
 
-    @Column(name = "page_count")
-    private Integer pageCount;
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Book> books = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private Author author;
 
     @PrePersist
     protected void onCreate() {
@@ -67,5 +67,4 @@ public class Book {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }

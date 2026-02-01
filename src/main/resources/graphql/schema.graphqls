@@ -1,40 +1,98 @@
-type Book {
+type Author {
     id: ID!
-    title: String!
-    author: String!
-    isbn: String
-    price: Float
-    publishedDate: String
+    name: String!
+    email: String
+    bio: String
+    birthDate: String
+    nationality: String
+    books: [Book!]
     createdAt: String!
     updatedAt: String!
 }
 
-input BookInput {
+type Book {
+    id: ID!
     title: String!
-    author: String!
-    isbn: String
+    isbn: String!
+    description: String
     price: Float
     publishedDate: String
+    pageCount: Int
+    author: Author!
+    createdAt: String!
+    updatedAt: String!
+}
+
+input AuthorInput {
+    name: String!
+    email: String!
+    bio: String
+    birthDate: String
+    nationality: String
+}
+
+input AuthorUpdateInput {
+    id: ID!
+    name: String
+    email: String
+    bio: String
+    birthDate: String
+    nationality: String
+}
+
+input BookInput {
+    title: String!
+    isbn: String!
+    description: String
+    price: Float
+    publishedDate: String
+    pageCount: Int
+    authorId: ID!
 }
 
 input BookUpdateInput {
     id: ID!
     title: String
-    author: String
     isbn: String
+    description: String
     price: Float
     publishedDate: String
+    pageCount: Int
+    authorId: ID
 }
 
 type Query {
-    getAllBooks: [Book]!
+    # Author 관련 쿼리
+    getAllAuthors: [Author!]!
+    getAuthorById(id: ID!): Author
+    getAuthorByEmail(email: String!): Author
+    getAuthorsByName(name: String!): [Author!]!
+    getAuthorsByNationality(nationality: String!): [Author!]!
+
+    # Book 관련 쿼리
+    getAllBooks: [Book!]!
     getBookById(id: ID!): Book
-    getBooksByAuthor(author: String!): [Book]!
-    getBooksByTitle(title: String!): [Book]!
-    searchBooks(keyword: String!): [Book]!
+    getBooksByTitle(title: String!): [Book!]!
+    getBooksByAuthorId(authorId: ID!): [Book!]!
+    getBooksByPriceRange(minPrice: Float!, maxPrice: Float!): [Book!]!
+    searchBooks(keyword: String!): [Book!]!
+
+    # 조인 쿼리
+    getAuthorWithBooks(id: ID!): Author
+    getBookWithAuthor(id: ID!): Book
+    getBooksByAuthorName(authorName: String!): [Book!]!
+    getBooksByAuthorNationality(nationality: String!): [Book!]!
+    getAuthorsWithBooks: [Author!]!
+    getBooksWithAuthors: [Book!]!
 }
 
 type Mutation {
+    # Author 관련 뮤테이션
+    createAuthor(authorInput: AuthorInput!): Author!
+    updateAuthor(authorUpdateInput: AuthorUpdateInput!): Author!
+    deleteAuthor(id: ID!): Boolean!
+
+    # Book 관련 뮤테이션
     createBook(bookInput: BookInput!): Book!
     updateBook(bookUpdateInput: BookUpdateInput!): Book!
     deleteBook(id: ID!): Boolean!

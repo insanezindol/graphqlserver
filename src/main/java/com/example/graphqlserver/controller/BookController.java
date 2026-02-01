@@ -1,6 +1,9 @@
 package com.example.graphqlserver.controller;
 
 
+import com.example.graphqlserver.dto.BookInput;
+import com.example.graphqlserver.dto.BookUpdateInput;
+import com.example.graphqlserver.entity.Author;
 import com.example.graphqlserver.entity.Book;
 import com.example.graphqlserver.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
+
 @Controller
 @RequiredArgsConstructor
 public class BookController {
@@ -23,6 +27,7 @@ public class BookController {
     private final BookService bookService;
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+    // 쿼리 매핑
     @QueryMapping
     public List<Book> getAllBooks() {
         return bookService.getAllBooks();
@@ -34,13 +39,18 @@ public class BookController {
     }
 
     @QueryMapping
-    public List<Book> getBooksByAuthor(@Argument String author) {
-        return bookService.getBooksByAuthor(author);
+    public List<Book> getBooksByTitle(@Argument String title) {
+        return bookService.getBooksByTitle(title);
     }
 
     @QueryMapping
-    public List<Book> getBooksByTitle(@Argument String title) {
-        return bookService.getBooksByTitle(title);
+    public List<Book> getBooksByAuthorId(@Argument Long authorId) {
+        return bookService.getBooksByAuthorId(authorId);
+    }
+
+    @QueryMapping
+    public List<Book> getBooksByPriceRange(@Argument Float minPrice, @Argument Float maxPrice) {
+        return bookService.getBooksByPriceRange(minPrice.doubleValue(), maxPrice.doubleValue());
     }
 
     @QueryMapping
@@ -48,28 +58,62 @@ public class BookController {
         return bookService.searchBooks(keyword);
     }
 
+    @QueryMapping
+    public Optional<Book> getBookWithAuthor(@Argument Long id) {
+        return bookService.getBookWithAuthor(id);
+    }
+
+    @QueryMapping
+    public List<Book> getBooksWithAuthors() {
+        return bookService.getBooksWithAuthors();
+    }
+
+    @QueryMapping
+    public List<Book> getBooksByAuthorName(@Argument String authorName) {
+        return bookService.getBooksByAuthorName(authorName);
+    }
+
+    @QueryMapping
+    public List<Book> getBooksByAuthorNationality(@Argument String nationality) {
+        return bookService.getBooksByAuthorNationality(nationality);
+    }
+
+    // 뮤테이션 매핑
     @MutationMapping
     public Book createBook(@Argument(name = "bookInput") BookInput bookInput) {
+        Author author = new Author();
+        author.setId(bookInput.getAuthorId());
+
         Book book = Book.builder()
                 .title(bookInput.getTitle())
-                .author(bookInput.getAuthor())
                 .isbn(bookInput.getIsbn())
+                .description(bookInput.getDescription())
                 .price(bookInput.getPrice())
+                .pageCount(bookInput.getPageCount())
                 .publishedDate(bookInput.getPublishedDate() != null ?
                         LocalDateTime.parse(bookInput.getPublishedDate(), formatter) : null)
+                .author(author)
                 .build();
         return bookService.createBook(book);
     }
 
     @MutationMapping
     public Book updateBook(@Argument(name = "bookUpdateInput") BookUpdateInput bookUpdateInput) {
+        Author author = null;
+        if (bookUpdateInput.getAuthorId() != null) {
+            author = new Author();
+            author.setId(bookUpdateInput.getAuthorId());
+        }
+
         Book bookDetails = Book.builder()
                 .title(bookUpdateInput.getTitle())
-                .author(bookUpdateInput.getAuthor())
                 .isbn(bookUpdateInput.getIsbn())
+                .description(bookUpdateInput.getDescription())
                 .price(bookUpdateInput.getPrice())
+                .pageCount(bookUpdateInput.getPageCount())
                 .publishedDate(bookUpdateInput.getPublishedDate() != null ?
                         LocalDateTime.parse(bookUpdateInput.getPublishedDate(), formatter) : null)
+                .author(author)
                 .build();
         return bookService.updateBook(bookUpdateInput.getId(), bookDetails);
     }
@@ -77,59 +121,6 @@ public class BookController {
     @MutationMapping
     public Boolean deleteBook(@Argument Long id) {
         return bookService.deleteBook(id);
-    }
-
-    // Input 클래스들 (내부 클래스로 정의)
-    public static class BookInput {
-        private String title;
-        private String author;
-        private String isbn;
-        private Double price;
-        private String publishedDate;
-
-        // Getters and Setters
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-
-        public String getAuthor() { return author; }
-        public void setAuthor(String author) { this.author = author; }
-
-        public String getIsbn() { return isbn; }
-        public void setIsbn(String isbn) { this.isbn = isbn; }
-
-        public Double getPrice() { return price; }
-        public void setPrice(Double price) { this.price = price; }
-
-        public String getPublishedDate() { return publishedDate; }
-        public void setPublishedDate(String publishedDate) { this.publishedDate = publishedDate; }
-    }
-
-    public static class BookUpdateInput {
-        private Long id;
-        private String title;
-        private String author;
-        private String isbn;
-        private Double price;
-        private String publishedDate;
-
-        // Getters and Setters
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
-
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-
-        public String getAuthor() { return author; }
-        public void setAuthor(String author) { this.author = author; }
-
-        public String getIsbn() { return isbn; }
-        public void setIsbn(String isbn) { this.isbn = isbn; }
-
-        public Double getPrice() { return price; }
-        public void setPrice(Double price) { this.price = price; }
-
-        public String getPublishedDate() { return publishedDate; }
-        public void setPublishedDate(String publishedDate) { this.publishedDate = publishedDate; }
     }
 
 }
